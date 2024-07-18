@@ -149,18 +149,20 @@ type XSDAny struct {
 
 // XSDComplexType represents a Schema complex type.
 type XSDComplexType struct {
-	XMLName        xml.Name          `xml:"complexType"`
-	Abstract       bool              `xml:"abstract,attr"`
-	Name           string            `xml:"name,attr"`
-	Mixed          bool              `xml:"mixed,attr"`
-	Sequence       []*XSDElement     `xml:"sequence>element"`
-	Choice         []*XSDElement     `xml:"choice>element"`
-	SequenceChoice []*XSDElement     `xml:"sequence>choice>element"`
-	All            []*XSDElement     `xml:"all>element"`
-	ComplexContent XSDComplexContent `xml:"complexContent"`
-	SimpleContent  XSDSimpleContent  `xml:"simpleContent"`
-	Attributes     []*XSDAttribute   `xml:"attribute"`
-	Any            []*XSDAny         `xml:"sequence>any"`
+	XMLName                xml.Name          `xml:"complexType"`
+	Abstract               bool              `xml:"abstract,attr"`
+	Name                   string            `xml:"name,attr"`
+	Mixed                  bool              `xml:"mixed,attr"`
+	Sequence               []*XSDElement     `xml:"sequence>element"`
+	Choice                 []*XSDElement     `xml:"choice>element"`
+	SequenceChoice         []*XSDElement     `xml:"sequence>choice>element"`
+	SequenceChoices        []*XSDElement     `xml:"choice>sequence>element"`
+	SequenceChoicesElement []*XSDElement     `xml:"sequence>choice>sequence>element"`
+	All                    []*XSDElement     `xml:"all>element"`
+	ComplexContent         XSDComplexContent `xml:"complexContent"`
+	SimpleContent          XSDSimpleContent  `xml:"simpleContent"`
+	Attributes             []*XSDAttribute   `xml:"attribute"`
+	Any                    []*XSDAny         `xml:"sequence>any"`
 }
 
 // XSDGroup element is used to define a group of elements to be used in complex type definitions.

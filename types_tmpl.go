@@ -40,6 +40,8 @@ var typesTmpl = `
 	{{template "Elements" .Extension.Sequence}}
 	{{template "Elements" .Extension.Choice}}
 	{{template "Elements" .Extension.SequenceChoice}}
+	{{template "Elements" .Extension.SequenceChoices}}
+	{{template "Elements" .Extension.SequenceChoicesElement}}
 	{{template "Attributes" .Extension.Attributes}}
 {{end}}
 
@@ -71,6 +73,8 @@ var typesTmpl = `
 			{{template "Elements" .Sequence}}
 			{{template "Elements" .Choice}}
 			{{template "Elements" .SequenceChoice}}
+			{{template "Elements" .SequenceChoices}}
+			{{template "Elements" .SequenceChoicesElement}}
 			{{template "Elements" .All}}
 			{{template "Attributes" .Attributes}}
 		{{end}}
@@ -81,7 +85,7 @@ var typesTmpl = `
 {{define "Elements"}}
 	{{range .}}
 		{{if ne .Ref ""}}
-			{{removeNS .Ref | replaceReservedWords  | makePublic}} {{if eq .MaxOccurs "unbounded"}}[]{{end}}{{toGoType .Ref .Nillable }} ` + "`" + `xml:"{{.Ref | removeNS}},omitempty" json:"{{.Ref | removeNS}},omitempty"` + "`" + `
+			{{removeNS .Ref | replaceReservedWords  | makePublic}} {{if eq .MaxOccurs "unbounded"}}[]{{end}}{{toGoType .Ref .Nillable }} ` + "`" + `xml:"{{.Ref | setCurrentNS}},omitempty" json:"{{.Ref | removeNS}},omitempty"` + "`" + `
 		{{else}}
 		{{if not .Type}}
 			{{if .SimpleType}}
@@ -131,6 +135,8 @@ var typesTmpl = `
 						{{template "Any" .Any}}
 						{{template "Elements" .Choice}}
 						{{template "Elements" .SequenceChoice}}
+						{{template "Elements" .SequenceChoices}}
+						{{template "Elements" .SequenceChoicesElement}}
 						{{template "Elements" .All}}
 						{{template "Attributes" .Attributes}}
 					{{end}}
@@ -150,7 +156,7 @@ var typesTmpl = `
 				{{else}}
 					type {{$typeName}} interface{}
 				{{end}}
-			
+
 				{{if .Restriction.Enumeration}}
 				const (
 					{{with .Restriction}}
@@ -215,6 +221,8 @@ var typesTmpl = `
 					{{template "Any" .Any}}
 					{{template "Elements" .Choice}}
 					{{template "Elements" .SequenceChoice}}
+					{{template "Elements" .SequenceChoices}}
+					{{template "Elements" .SequenceChoicesElement}}
 					{{template "Elements" .All}}
 					{{template "Attributes" .Attributes}}
 				{{end}}

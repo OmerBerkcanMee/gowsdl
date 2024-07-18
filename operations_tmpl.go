@@ -9,7 +9,7 @@ var opsTmpl = `
 	{{$privateType := .Name | makePrivate}}
 	{{$exportType := .Name | makePublic}}
 
-	type {{$exportType}} interface {
+	type I{{$exportType}} interface {
 		{{range .Operations}}
 			{{$faults := len .Faults}}
 			{{$soapAction := findSOAPAction .Name $privateType}}
@@ -33,7 +33,7 @@ var opsTmpl = `
 		client *soap.Client
 	}
 
-	func New{{$exportType}}(client *soap.Client) {{$exportType}} {
+	func New{{$exportType}}Opr(client *soap.Client) I{{$exportType}} {
 		return &{{$privateType}}{
 			client: client,
 		}
@@ -45,7 +45,7 @@ var opsTmpl = `
 		{{$responseType := findType .Output.Message | replaceReservedWords | makePublic}}
 		func (service *{{$privateType}}) {{makePublic .Name | replaceReservedWords}}Context (ctx context.Context, {{if ne $requestType ""}}request *{{$requestType}}{{end}}) ({{if ne $responseType ""}}*{{$responseType}}, {{end}}error) {
 			{{if ne $responseType ""}}response := new({{$responseType}}){{end}}
-			err := service.client.CallContext(ctx, "{{if ne $soapAction ""}}{{$soapAction}}{{else}}''{{end}}", {{if ne $requestType ""}}request{{else}}nil{{end}}, {{if ne $responseType ""}}response{{else}}struct{}{}{{end}})
+			err := service.client.Do(ctx, "{{if ne $soapAction ""}}{{$soapAction}}{{else}}''{{end}}", {{if ne $requestType ""}}request{{else}}nil{{end}}, {{if ne $responseType ""}}response{{else}}struct{}{}{{end}})
 			if err != nil {
 				return {{if ne $responseType ""}}nil, {{end}}err
 			}

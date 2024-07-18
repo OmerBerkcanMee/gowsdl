@@ -196,7 +196,10 @@ func (g *GoWSDL) fetchFile(loc *Location) (data []byte, err error) {
 	} else {
 		log.Println("Downloading", "file", loc.u.String())
 		data, err = downloadFile(loc.u.String(), g.ignoreTLS)
+		time.Sleep(time.Second * 2)
+
 	}
+
 	return
 }
 
@@ -242,7 +245,6 @@ func (g *GoWSDL) resolveXSDExternals(schema *XSDSchema, loc *Location) error {
 		if data, err = g.fetchFile(location); err != nil {
 			return err
 		}
-
 		newschema := new(XSDSchema)
 
 		err = xml.Unmarshal(data, newschema)
@@ -297,6 +299,7 @@ func (g *GoWSDL) genTypes() ([]byte, error) {
 		"makeFieldPublic":          makePublic,
 		"comment":                  comment,
 		"removeNS":                 removeNS,
+		"setCurrentNS":             g.setCurrentNS,
 		"goString":                 goString,
 		"findNameByType":           g.findNameByType,
 		"removePointerFromType":    removePointerFromType,
@@ -306,6 +309,38 @@ func (g *GoWSDL) genTypes() ([]byte, error) {
 
 	data := new(bytes.Buffer)
 	tmpl := template.Must(template.New("types").Funcs(funcMap).Parse(typesTmpl))
+	//This avoids duplicate struct
+	m := make(map[string]string)
+	for i, v := range g.wsdl.Types.Schemas {
+		for j, t := range v.Elements {
+			if _, ok := m[t.Name]; ok {
+				g.wsdl.Types.Schemas[i].Elements[j].Name = fmt.Sprintf("%s%s%d", g.wsdl.Types.Schemas[i].Elements[j].Name, "Dub", i)
+			} else {
+				m[t.Name] = stripns(t.Type)
+			}
+		}
+		for j, t := range v.SimpleType {
+			if _, ok := m[t.Name]; ok {
+				g.wsdl.Types.Schemas[i].SimpleType[j].Name = fmt.Sprintf("%s%s%d", g.wsdl.Types.Schemas[i].SimpleType[j].Name, "Dub", i)
+			} else {
+				m[t.Name] = stripns(t.Restriction.Base)
+			}
+		}
+		for j, t := range v.ComplexTypes {
+			if len(t.SequenceChoice) == 0 && len(t.Choice) == 0 && len(t.Sequence) == 0 &&
+				len(t.Attributes) == 0 && t.ComplexContent.XMLName.Local == "" && t.SimpleContent.XMLName.Local == "" {
+				found := false
+				for _, el := range v.Elements {
+					if stripns(el.Type) == t.Name {
+						found = true
+					}
+				}
+				if !found {
+					g.wsdl.Types.Schemas[i].ComplexTypes[j].Name = fmt.Sprint(g.wsdl.Types.Schemas[i].ComplexTypes[j].Name, "Deprecated")
+				}
+			}
+		}
+	}
 	err := tmpl.Execute(data, g.wsdl.Types)
 	if err != nil {
 		return nil, err
@@ -538,6 +573,42 @@ func removeNS(xsdType string) string {
 	}
 
 	return r[0]
+}
+
+func (g *GoWSDL) setCurrentNS(xsdType string) string {
+	// Handles name space, ie. xsd:string, xs:string
+	r := strings.Split(xsdType, ":")
+	found := false
+	current := r[0]
+	if len(r) == 2 {
+		current = r[1]
+	}
+	for _, v := range g.wsdl.Types.Schemas {
+		for _, t := range v.Elements {
+			if t.Name == stripns(xsdType) {
+				found = true
+			}
+		}
+		for _, t := range v.SimpleType {
+			if t.Name == stripns(xsdType) {
+				found = true
+			}
+		}
+		for _, t := range v.ComplexTypes {
+			if t.Name == stripns(xsdType) {
+				found = true
+			}
+		}
+		if found == true {
+			current = v.Xmlns[r[0]]
+			break
+		}
+	}
+	if len(r) == 2 {
+		return current + " " + r[1]
+	}
+
+	return current
 }
 
 func toGoType(xsdType string, nillable bool) string {

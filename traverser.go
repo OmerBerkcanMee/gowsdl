@@ -51,6 +51,7 @@ func (t *traverser) traverse() {
 // the original type name is returned instead.
 // If no elements are found, the original type name is returned instead.
 func (t *traverser) findNameByType(name string) string {
+
 	t.initFindNameByType(name)
 
 	// Search for elements of given type
