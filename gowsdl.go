@@ -304,6 +304,7 @@ func (g *GoWSDL) genTypes() ([]byte, error) {
 		"findNameByType":           g.findNameByType,
 		"removePointerFromType":    removePointerFromType,
 		"setNS":                    g.setNS,
+		"setRefForComplexType":     g.setRefForComplexType,
 		"getNS":                    g.getNS,
 	}
 
@@ -575,6 +576,27 @@ func removeNS(xsdType string) string {
 	return r[0]
 }
 
+func (g *GoWSDL) setRefForComplexType(xsdType string, name string) string {
+	// Handles name space, ie. xsd:string, xs:string
+	//r := strings.Split(xsdType, ":")
+	for _, v := range g.wsdl.Types.Schemas {
+		for _, t := range v.SimpleType {
+			if t.Name == stripns(xsdType) {
+				return name
+			}
+		}
+		for _, t := range v.ComplexTypes {
+			for _, j := range t.Sequence {
+				if j.Type == xsdType && name == j.Name {
+					return v.TargetNamespace + " " + name
+				}
+			}
+		}
+
+	}
+	return name
+}
+
 func (g *GoWSDL) setCurrentNS(xsdType string) string {
 	// Handles name space, ie. xsd:string, xs:string
 	r := strings.Split(xsdType, ":")
@@ -587,16 +609,19 @@ func (g *GoWSDL) setCurrentNS(xsdType string) string {
 		for _, t := range v.Elements {
 			if t.Name == stripns(xsdType) {
 				found = true
+				break
 			}
 		}
 		for _, t := range v.SimpleType {
 			if t.Name == stripns(xsdType) {
 				found = true
+				break
 			}
 		}
 		for _, t := range v.ComplexTypes {
 			if t.Name == stripns(xsdType) {
 				found = true
+				break
 			}
 		}
 		if found == true {

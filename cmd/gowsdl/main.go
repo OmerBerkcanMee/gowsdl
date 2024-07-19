@@ -70,6 +70,7 @@ var outFile = flag.String("o", "myservice.go", "File where the generated code wi
 var dir = flag.String("d", "./", "Directory under which package directory will be created")
 var insecure = flag.Bool("i", false, "Skips TLS Verification")
 var makePublic = flag.Bool("make-public", true, "Make the generated types public/exported")
+var server = flag.Bool("s", false, "Generate server code")
 
 func init() {
 	log.SetFlags(0)
@@ -138,6 +139,10 @@ func main() {
 
 	file.Write(source)
 
+	if !*server {
+		log.Println("Done 👍")
+		return
+	}
 	// server
 	serverFile, err := os.Create(pkg + "/" + "server" + *outFile)
 	if err != nil {
