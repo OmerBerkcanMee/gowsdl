@@ -13,7 +13,7 @@ import (
 	"context"
 	"encoding/xml"
 	"time"
-	"github.com/OmerBerkcanMee/gosoap"
+	"github.com/MeeApps/gosoap"
 
 	{{/*range .Imports*/}}
 		{{/*.*/}}
